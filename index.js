@@ -109,32 +109,29 @@ app.put('/api/clienteactualizar/:id', async (req, res) => {
 
 
 //Obtener un Cliente para el form login
-app.post('/api/clientes/login', async (req, res) => {
-    const { cli_usuario, cli_contra } = req.body;
+    app.post('/api/clientes/login', async (req, res) => {
+        try {
+            const db = await dbPromise;
+            const collection = db.collection("clientes");
     
-    // Verificar que se proporcionen usuario y contraseña
-    if (!cli_usuario || !cli_contra) {
-        return res.status(400).send("El usuario y la contraseña son requeridos.");
-    }
+            // Extraer usuario y contraseña del cuerpo de la solicitud
+            const { cli_usuario, cli_contra } = req.body;
     
-    try {
-        const db = await dbPromise;
-        const collection = db.collection("clientes");
-        
-        const cliente = await collection.findOne({ cli_usuario, cli_contra });
-        
-        if (cliente) {
-            // Cliente encontrado, enviar respuesta exitosa
-            res.status(200).send("Inicio de sesión exitoso.");
-        } else {
-            // No se encontró el cliente, enviar respuesta de error
-            res.status(404).send("Credenciales incorrectas.");
+            // Consulta para encontrar un cliente con el usuario y la contraseña proporcionados
+            const cliente = await collection.findOne({ cli_usuario: cli_usuario, cli_contra: cli_contra });
+    
+            if (cliente) {
+                // Si se encuentra el cliente, responder con los detalles del cliente
+                res.json(cliente);
+            } else {
+                // Si no se encuentra el cliente, responder con un mensaje de credenciales incorrectas
+                res.status(401).json({ mensaje: 'Credenciales incorrectas' });
+            }
+        } catch (error) {
+            console.error('Error al intentar buscar cliente:', error);
+            res.status(500).json({ mensaje: 'Error en el servidor' });
         }
-    } catch (error) {
-        console.error("Error al iniciar sesión:", error);
-        res.status(500).send("Error interno del servidor.");
-    }
-});
+    });
 
 // Agregar nuevo cliente
 app.post('/api/clientespost', async (req, res) => {
