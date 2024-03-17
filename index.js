@@ -184,7 +184,7 @@ app.get('/api/empleados', async (req, res) => {
     res.json(empleados);
 });
 
-app.delete('/api/empleados/:id', async (req, res) => {
+app.delete('/api/empleadodelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -257,7 +257,7 @@ if (!E_nombre && !E_apaterno && !E_amaterno && !E_telefono && !E_puesto && !E_us
 });
 
 // Agregar nuevo empleado
-app.post('/api/empleados', async (req, res) => {
+app.post('/api/empleadospost', async (req, res) => {
     const { E_nombre, E_apaterno, E_amaterno, E_telefono, E_puesto, E_usuario, E_contra, E_usuarioTipo, E_correo, E_pregunta_secreta, E_respuesta_secreta, E_direccion } = req.body;
 
     // Verificar que los campos requeridos estén presentes
@@ -333,7 +333,7 @@ app.get('/api/catalogo', async (req, res) => {
 });
 
 
-app.delete('/api/catalogo/:id', async (req, res) => {
+app.delete('/api/catalogodelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -356,7 +356,7 @@ app.delete('/api/catalogo/:id', async (req, res) => {
     }
 });
 // Actualizar un producto del catálogo
-app.put('/api/catalogo/:id', async (req, res) => {
+app.put('/api/catalogoactualizar/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -389,7 +389,7 @@ app.put('/api/catalogo/:id', async (req, res) => {
     }
 });
 
-app.post('/api/catalogo', async (req, res) => {
+app.post('/api/catalogopost', async (req, res) => {
     const { nombre, categoria, tipo, precio, stock, costo, detalles, imgCortina } = req.body;
     
     // Verificar que todos los campos necesarios estén presentes
@@ -432,7 +432,7 @@ app.get('/api/dispositivoiot', async (req, res) => {
     res.json(dispositivo);
 });
 
-app.delete('/api/dispositivoiot/:id', async (req, res) => {
+app.delete('/api/dispositivoiotdelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -456,7 +456,7 @@ app.delete('/api/dispositivoiot/:id', async (req, res) => {
 });
 
 // Actualizar un dispositivo IoT
-app.put('/api/dispositivoiot/:id', async (req, res) => {
+app.put('/api/dispositivoiotactua/:id', async (req, res) => {
     const { id } = req.params;
 
     if (!ObjectId.isValid(id)) {
@@ -490,7 +490,7 @@ app.put('/api/dispositivoiot/:id', async (req, res) => {
 });
 
 // Agregar un nuevo dispositivo IoT
-app.post('/api/dispositivoiot', async (req, res) => {
+app.post('/api/dispositivoiotpost', async (req, res) => {
     const { nombre_tarjeta, estado_cortinero, fecha_modificacion } = req.body;
 
     // Verificar que los campos requeridos estén presentes
@@ -527,7 +527,7 @@ app.get('/api/preguntas', async (req, res) => {
     res.json(preguntas);
 });
 
-app.delete('/api/preguntas/:id', async (req, res) => {
+app.delete('/api/preguntasdelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -550,7 +550,7 @@ app.delete('/api/preguntas/:id', async (req, res) => {
     }
 });
 
-app.put('/api/preguntas/:id', async (req, res) => {
+app.put('/api/preguntasactualizar/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -584,6 +584,32 @@ app.put('/api/preguntas/:id', async (req, res) => {
     }
 });
 
+app.post('/api/preguntas', async (req, res) => {
+    const { pregunta } = req.body;
+    
+    // Verificar que la pregunta esté presente
+    if (!pregunta) {
+        return res.status(400).send("La pregunta es requerida.");
+    }
+    
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("preguntas");
+        
+        const result = await collection.insertOne({ pregunta });
+        
+        if (result.insertedCount === 1) {
+            res.status(201).send("Pregunta agregada correctamente.");
+        } else {
+            res.status(500).send("Error al agregar la pregunta.");
+        }
+    } catch (error) {
+        console.error("Error agregando pregunta:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+
+
 app.get('/api/puestos', async (req, res) => {
     const db = await dbPromise;
     const collection = db.collection("puestos");
@@ -591,7 +617,7 @@ app.get('/api/puestos', async (req, res) => {
     res.json(puestos);
 });
 
-app.delete('/api/puestos/:id', async (req, res) => {
+app.delete('/api/puestosdelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -614,7 +640,7 @@ app.delete('/api/puestos/:id', async (req, res) => {
     }
 });
 
-app.put('/api/puestos/:id', async (req, res) => {
+app.put('/api/puestosactualizar/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
@@ -644,6 +670,31 @@ app.put('/api/puestos/:id', async (req, res) => {
         }
     } catch (error) {
         console.error("Error actualizando puesto:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+
+app.post('/api/puestospost', async (req, res) => {
+    const { nombre_del_puesto } = req.body;
+    
+    // Verificar que el nombre del puesto esté presente
+    if (!nombre_del_puesto) {
+        return res.status(400).send("El nombre del puesto es requerido.");
+    }
+    
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("puestos");
+        
+        const result = await collection.insertOne({ nombre_del_puesto });
+        
+        if (result.insertedCount === 1) {
+            res.status(201).send("Puesto agregado correctamente.");
+        } else {
+            res.status(500).send("Error al agregar el puesto.");
+        }
+    } catch (error) {
+        console.error("Error agregando puesto:", error);
         res.status(500).send("Error interno del servidor.");
     }
 });
