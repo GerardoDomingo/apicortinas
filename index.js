@@ -133,20 +133,24 @@ app.put('/api/clienteactualizar/:id', async (req, res) => {
         }
     });
 
-// Agregar nuevo cliente
+
+ // Agregar nuevo cliente
 app.post('/api/clientespost', async (req, res) => {
-    const { cli_nombre, cli_apaterno, cli_amaterno, cli_direccion, cli_usuario, cli_contra, cli_correo, cli_telefono, cli_pregunta_secreta, cli_respuesta_secreta, fotoPerfil } = req.body;
-
-    // Verificar que los campos requeridos estén presentes
-    if (!cli_nombre || !cli_apaterno || !cli_amaterno || !cli_direccion || !cli_usuario || !cli_contra || !cli_correo || !cli_telefono || !cli_pregunta_secreta || !cli_respuesta_secreta || !fotoPerfil) {
-        return res.status(400).send("Todos los campos son requeridos.");
-    }
-
     try {
+        const { cli_nombre, cli_apaterno, cli_amaterno, cli_direccion, cli_usuario, cli_contra, cli_correo, cli_telefono, cli_pregunta_secreta, cli_respuesta_secreta, fotoPerfil } = req.body;
+
+        // Verificar que los campos requeridos estén presentes y en el formato correcto
+        if (!cli_nombre || !cli_apaterno || !cli_amaterno || !cli_direccion || !cli_usuario || !cli_contra || !cli_correo || !cli_telefono || !cli_pregunta_secreta || !cli_respuesta_secreta) {
+            return res.status(400).send("Todos los campos son requeridos y deben tener un valor válido.");
+        }
+
+        // Aquí podrías agregar más validaciones según tus necesidades, como verificar el formato del correo electrónico, el número de teléfono, etc.
+
         const db = await dbPromise;
         const collection = db.collection("clientes");
 
-        const result = await collection.insertOne({
+        // Crear un objeto con los campos obligatorios
+        const clienteData = {
             cli_nombre,
             cli_apaterno,
             cli_amaterno,
@@ -156,9 +160,15 @@ app.post('/api/clientespost', async (req, res) => {
             cli_correo,
             cli_telefono,
             cli_pregunta_secreta,
-            cli_respuesta_secreta,
-            fotoPerfil
-        });
+            cli_respuesta_secreta
+        };
+
+        // Agregar campos opcionales si están presentes en la solicitud
+        if (fotoPerfil !== undefined) {
+            clienteData.fotoPerfil = fotoPerfil;
+        }
+
+        const result = await collection.insertOne(clienteData);
 
         if (result.insertedCount === 1) {
             res.status(201).send("Cliente agregado correctamente.");
