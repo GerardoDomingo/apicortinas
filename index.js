@@ -706,6 +706,75 @@ app.post('/api/puestospost', async (req, res) => {
     }
 });
 
+// categoria coleccion
+app.get('/api/categorias', async (req, res) => {
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("categoria");
+        const categorias = await collection.find({}).toArray();
+        res.json(categorias);
+    } catch (error) {
+        console.error("Error al obtener categorías:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+//eliminar 1 categoria
+app.delete('/api/categoriadelet/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("categoria");
+        const result = await collection.deleteOne({ "_id": new ObjectId(id) });
+        if (result.deletedCount === 1) {
+            res.status(204).end();
+        } else {
+            res.status(404).send("Categoría no encontrada.");
+        }
+    } catch (error) {
+        console.error("Error eliminando categoría:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+//actualizar categoria
+app.put('/api/categoriaupdate/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre } = req.body;
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("categoria");
+        const result = await collection.updateOne(
+            { "_id": new ObjectId(id) },
+            { $set: { nombre } }
+        );
+        if (result.matchedCount === 1) {
+            res.status(200).send("Categoría actualizada correctamente.");
+        } else {
+            res.status(404).send("Categoría no encontrada.");
+        }
+    } catch (error) {
+        console.error("Error actualizando categoría:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+//agregar categoria
+app.post('/api/categoriaspost', async (req, res) => {
+    const { nombre } = req.body;
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("categoria");
+        const result = await collection.insertOne({ nombre });
+        if (result.insertedCount === 1) {
+            res.status(201).send("Categoría agregada correctamente.");
+        } else {
+            res.status(500).send("Error al agregar categoría.");
+        }
+    } catch (error) {
+        console.error("Error agregando categoría:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
