@@ -330,13 +330,18 @@ app.post('/api/empleados/login', async (req, res) => {
     }
 });
 
-
 //catalogo_productos connection
+
 app.get('/api/catalogo', async (req, res) => {
-    const db = await dbPromise;
-    const collection = db.collection("catalogo_productos");
-    const catalogo = await collection.find({}).toArray();
-    res.json(catalogo);
+    try {
+        const db = await dbPromise;
+        const collection = db.collection("catalogo_productos");
+        const catalogo = await collection.find({}).toArray();
+        res.json(catalogo);
+    } catch (error) {
+        console.error("Error al obtener categoría productos:", error);
+        res.status(500).send("Error interno del servidor.");
+    }
 });
 
 
@@ -344,7 +349,7 @@ app.delete('/api/catalogodelet/:id', async (req, res) => {
     const { id } = req.params;
     
     if (!ObjectId.isValid(id)) {
-        return res.status(400).send("Invalid ID format.");
+        return res.status(400).send("Formato de ID inválido.");
     }
     
     try {
@@ -355,14 +360,17 @@ app.delete('/api/catalogodelet/:id', async (req, res) => {
         if (result.deletedCount === 1) {
             res.status(204).end();
         } else {
-            res.status(404).send("producto del catálogo not found.");
+            res.status(404).send("Categoría no encontrada.");
         }
     } catch (error) {
-        console.error("Error deleting producto del catálogo:", error);
-        res.status(500).send("Internal server error.");
+        console.error("Error eliminando categoría:", error);
+        res.status(500).send("Error interno del servidor.");
     }
 });
+
+
 // Actualizar un producto del catálogo
+
 app.put('/api/catalogoactualizar/:id', async (req, res) => {
     const { id } = req.params;
     
@@ -371,43 +379,62 @@ app.put('/api/catalogoactualizar/:id', async (req, res) => {
     }
     
     const { nombre, categoria, tipo, precio, stock, costo, detalles, imgCortina } = req.body;
-    
-    if (!nombre || !categoria || !tipo || !precio || !stock || !costo || !detalles) {
-        return res.status(400).send("Todos los campos son requeridos.");
-    }
-    
+
     try {
         const db = await dbPromise;
         const collection = db.collection("catalogo_productos");
         
+        // Construir el objeto de actualización con los campos proporcionados
+        let updateFields = {};
+        if (nombre !== undefined) {
+            updateFields.nombre = nombre;
+        }
+        if (categoria !== undefined) {
+            updateFields.categoria = categoria;
+        }
+        if (tipo !== undefined) {
+            updateFields.tipo = tipo;
+        }
+        if (precio !== undefined) {
+            updateFields.precio = precio;
+        }
+        if (stock !== undefined) {
+            updateFields.stock = stock;
+        }
+        if (costo !== undefined) {
+            updateFields.costo = costo;
+        }
+        if (detalles !== undefined) {
+            updateFields.detalles = detalles;
+        }
+        if (imgCortina !== undefined) {
+            updateFields.imgCortina = imgCortina;
+        }
+
         const result = await collection.updateOne(
             { "_id": new ObjectId(id) },
-            { $set: { nombre, categoria, tipo, precio, stock, costo, detalles, imgCortina } }
+            { $set: updateFields }
         );
         
         if (result.matchedCount === 1) {
-            res.status(200).send("Producto del catálogo actualizado correctamente.");
+            res.status(200).send("producto actualizado correctamente.");
         } else {
-            res.status(404).send("Producto del catálogo no encontrado.");
+            res.status(404).send("producto no encontrada.");
         }
     } catch (error) {
-        console.error("Error actualizando producto del catálogo:", error);
+        console.error("Error actualizando producto:", error);
         res.status(500).send("Error interno del servidor.");
     }
 });
 
+//agregar catalogo_producto
 app.post('/api/catalogopost', async (req, res) => {
     const { nombre, categoria, tipo, precio, stock, costo, detalles, imgCortina } = req.body;
-    
-    // Verificar que todos los campos necesarios estén presentes
-    if (!nombre || !categoria || !tipo || !precio || !stock || !costo || !detalles) {
-        return res.status(400).send("Todos los campos son requeridos.");
-    }
-    
+
     try {
         const db = await dbPromise;
         const collection = db.collection("catalogo_productos");
-        
+
         const result = await collection.insertOne({
             nombre,
             categoria,
@@ -418,18 +445,17 @@ app.post('/api/catalogopost', async (req, res) => {
             detalles,
             imgCortina
         });
-        
+
         if (result.insertedCount === 1) {
-            res.status(201).send("Producto del catálogo agregado correctamente.");
+            res.status(201).send("producto agregado correctamente.");
         } else {
-            res.status(500).send("Error al agregar el producto del catálogo.");
+            res.status(500).send("Error al agregar el producto.");
         }
     } catch (error) {
-        console.error("Error al agregar producto del catálogo:", error);
+        console.error("Error agregando producto:", error);
         res.status(500).send("Error interno del servidor.");
     }
 });
-
 
 //dispositivo IoT
 app.get('/api/dispositivoiot', async (req, res) => {
